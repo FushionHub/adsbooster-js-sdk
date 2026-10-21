@@ -1,0 +1,29 @@
+{
+  "name": "adsbooster-js-sdk",
+  "version": "1.0.0",
+  "description": "Official JavaScript SDK for the Adsbooster.net REST API v1 - AI UGC creatives, multi-network campaigns, social publishing, server-side tracking (CAPI), credits and webhooks.",
+  "main": "dist/adsbooster.js",
+  "module": "dist/adsbooster.esm.js",
+  "unpkg": "dist/adsbooster.js",
+  "jsdelivr": "dist/adsbooster.js",
+  "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./dist/adsbooster.esm.js",
+      "require": "./dist/adsbooster.js"
+    }
+  },
+  "files": ["dist/", "types/", "src/", "examples/", "README.md", "LICENSE"],
+  "scripts": {
+    "test": "node examples/node-smoke-test.js"
+  },
+  "keywords": ["adsbooster", "ads", "ugc", "ai", "social-media", "marketing", "capi", "conversions-api", "tiktok", "meta", "sdk"],
+  "author": "Adsbooster.net Engineering Team",
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "repository": { "type": "git", "url": "git+https://github.com/adsbooster-sdks/adsbooster-js-sdk.git" },
+  "bugs": { "url": "https://github.com/adsbooster-sdks/adsbooster-js-sdk/issues" },
+  "homepage": "https://github.com/adsbooster-sdks/adsbooster-js-sdk#readme",
+  "sideEffects": false
+}

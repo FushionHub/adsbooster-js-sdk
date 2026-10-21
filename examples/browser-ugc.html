@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adsbooster SDK — browser UGC generation demo</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #080c14; color: #e8eefc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .card { background: #0d1524; border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 28px; width: 380px; }
+  input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12); background: #080c14; color: #fff; margin-bottom: 12px; box-sizing: border-box; }
+  button { width: 100%; padding: 12px; border: 0; border-radius: 999px; background: #c8ff00; color: #08101f; font-weight: 800; cursor: pointer; }
+  img { width: 100%; border-radius: 12px; margin-top: 14px; display: none; }
+  small { color: #8695b3; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2 style="margin:0 0 4px">AI UGC Creative</h2>
+    <small>Generated with the Adsbooster JavaScript SDK (Nano Banana 2 stack)</small>
+    <!-- Self-hosted SDK straight from your deployment -->
+    <script src="http://127.0.0.1/seopp/api/v1/sdk/adsbooster.js"></script>
+    <input id="product" placeholder="Product name, e.g. Cloud-Knit Running Shoes" style="margin-top:16px">
+    <button id="go">✨ Generate creative (5 AI credits)</button>
+    <img id="preview" alt="Generated UGC creative">
+    <p id="status" style="font-size:13px;color:#8695b3"></p>
+  </div>
+
+  <script>
+    // For browser demos only — a real SaaS should proxy API calls through its
+    // backend so the key is never exposed in the page.
+    const client = new Adsbooster.Adsbooster({
+      apiKey: prompt('Paste your Adsbooster API key:') || '',
+      baseUrl: 'http://127.0.0.1/seopp',
+    });
+
+    document.getElementById('go').addEventListener('click', async () => {
+      const product = document.getElementById('product').value.trim();
+      const status = document.getElementById('status');
+      if (!product) { status.textContent = 'Type a product name first.'; return; }
+      status.textContent = 'Generating… (~10s)';
+      try {
+        const res = await client.ugc.generateImage({ product_name: product, ugc_style: 'selfie_hold' });
+        const url = res.creative?.image_url;
+        if (!url) throw new Error('No image URL in response');
+        document.getElementById('preview').src = url.startsWith('http') ? url : (client.baseUrl + '/' + url.replace(/^\//, ''));
+        document.getElementById('preview').style.display = 'block';
+        status.textContent = 'Done · ' + (res.creative?.provider || '') + ' · credits left: ' + res.credits_remaining;
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
+      }
+    });
+  </script>
+</body>
+</html>
