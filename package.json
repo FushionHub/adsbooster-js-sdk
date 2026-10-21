@@ -22,8 +22,8 @@
   "author": "Adsbooster.net Engineering Team",
   "license": "MIT",
   "engines": { "node": ">=18" },
-  "repository": { "type": "git", "url": "git+https://github.com/adsbooster-sdks/adsbooster-js-sdk.git" },
-  "bugs": { "url": "https://github.com/adsbooster-sdks/adsbooster-js-sdk/issues" },
-  "homepage": "https://github.com/adsbooster-sdks/adsbooster-js-sdk#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/FushionHub/adsbooster-js-sdk.git" },
+  "bugs": { "url": "https://github.com/FushionHub/adsbooster-js-sdk/issues" },
+  "homepage": "https://github.com/FushionHub/adsbooster-js-sdk#readme",
   "sideEffects": false
 }

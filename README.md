@@ -7,8 +7,9 @@ Official JavaScript / TypeScript client for the **Adsbooster.net REST API v1** �
 - **Resilient** — automatic retries on `429`/`5xx`, timeout via `AbortController`, rate-limit telemetry on every response
 - **Universal** — UMD (`dist/adsbooster.js`), ESM (`dist/adsbooster.esm.js`)
 
+> SDK repo: https://github.com/FushionHub/adsbooster-js-sdk
 > Platform repo: https://github.com/FushionHub/seopp
-> SDK repo: https://github.com/adsbooster-sdks/adsbooster-js-sdk
+> The SDK will move to the `adsbooster-sdks` organization — after transferring, update `repository` in package.json and the links above.
 
 ---
 

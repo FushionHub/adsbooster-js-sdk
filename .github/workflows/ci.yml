@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Syntax check (all builds)
+        run: |
+          node --check src/adsbooster.js
+          node --check dist/adsbooster.js
+          node --check dist/adsbooster.esm.js
+      - name: Unit sanity (client construction + webhook signing)
+        run: |
+          node -e "
+            const { Adsbooster, webhooks, AdsboosterError } = require('./dist/adsbooster.js');
+            const c = new Adsbooster({ apiKey: 'adsb_test_ci', baseUrl: 'https://example.com' });
+            if (c.apiBase !== 'https://example.com/api/v1') throw new Error('apiBase mismatch');
+            const sig = webhooks.sign(JSON.stringify({event:'payment.completed'}), 'whsec_ci');
+            if (!webhooks.verify(JSON.stringify({event:'payment.completed'}), sig, 'whsec_ci')) throw new Error('webhook verify failed');
+            if (webhooks.verify(JSON.stringify({event:'tampered'}), sig, 'whsec_ci')) throw new Error('webhook verify must reject tampered bodies');
+            let threw = false;
+            try { new Adsbooster({}); } catch (e) { threw = e instanceof AdsboosterError; }
+            if (!threw) throw new Error('missing apiKey must throw AdsboosterError');
+            console.log('CI sanity checks passed');
+          "
