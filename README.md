@@ -83,7 +83,8 @@ await client.posts.create({
 | `client.directory` | `list({category,q,limit})` · `createListing(payload)` | `/api/v1/directory.php` |
 | `client.reviews` | `list({limit})` · `submit({rating,review_text,…})` | `/api/v1/reviews.php` |
 | `client.capi` | `scriptUrl()` · `track({pixel_token,event_name,…})` | `/api/v1/capi-bridge.php` |
-| `client.webhooks` | `testPingUrl(url)` | Developer Console |
+| `client.webhooks` | `list()` · `test(url)` — signed ping to YOUR registered https endpoint | `/api/v1/webhooks.php` |
+| `client.publicAnalytics` | `feed(view?)` · `totals()` — public aggregate, no auth (30 req/min/IP) | `/api/v1/public-analytics.php` |
 
 Every response is the raw API payload (`{ success: true, … }`). Non-2xx responses throw an [`AdsboosterError`](#error-handling).
 

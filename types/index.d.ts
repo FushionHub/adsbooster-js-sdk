@@ -157,7 +157,18 @@ export declare class Adsbooster {
   };
 
   readonly webhooks: {
-    testPingUrl(targetUrl: string): string;
+    /** GET /api/v1/webhooks.php — list your registered webhook endpoints. */
+    list(): Promise<ApiResponse>;
+    /** Signed test ping to one of YOUR registered https:// endpoints. */
+    test(targetUrl: string): Promise<ApiResponse>;
+    /** Deprecated alias — resolves the ping URL instead of firing it. */
+    testPingUrl(targetUrl: string): Promise<string>;
+  };
+
+  /** Public aggregate analytics — no auth, 30 req/min/IP. */
+  readonly publicAnalytics: {
+    feed(view?: 'all' | 'campaigns' | 'users' | 'platforms' | 'success'): Promise<ApiResponse>;
+    totals(): Promise<ApiResponse>;
   };
 }
 

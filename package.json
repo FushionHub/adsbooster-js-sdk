@@ -1,6 +1,6 @@
 {
   "name": "adsbooster-js-sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Official JavaScript SDK for the Adsbooster.net REST API v1 - AI UGC creatives, multi-network campaigns, social publishing, server-side tracking (CAPI), credits and webhooks.",
   "main": "dist/adsbooster.js",
   "module": "dist/adsbooster.esm.js",
@@ -16,7 +16,8 @@
   },
   "files": ["dist/", "types/", "src/", "examples/", "README.md", "LICENSE"],
   "scripts": {
-    "test": "node examples/node-smoke-test.js"
+    "test": "node tools/ci-sanity.js",
+    "build:esm": "node tools/build-esm.js"
   },
   "keywords": ["adsbooster", "ads", "ugc", "ai", "social-media", "marketing", "capi", "conversions-api", "tiktok", "meta", "sdk"],
   "author": "Adsbooster.net Engineering Team",
