@@ -1,30 +1,84 @@
 {
   "name": "adsbooster-js-sdk",
-  "version": "1.1.0",
-  "description": "Official JavaScript SDK for the Adsbooster.net REST API v1 - AI UGC creatives, multi-network campaigns, social publishing, server-side tracking (CAPI), credits and webhooks.",
+  "version": "1.2.0",
+  "description": "Official JavaScript SDK for Adsbooster.net REST API v1 - AI UGC creatives, multi-network campaigns, social publishing, server-side tracking (CAPI), credits, webhooks and optional Flutterwave / Gemini / Groq integrations.",
   "main": "dist/adsbooster.js",
-  "module": "dist/adsbooster.esm.js",
+  "module": "dist/adsbooster.mjs",
   "unpkg": "dist/adsbooster.js",
   "jsdelivr": "dist/adsbooster.js",
   "types": "types/index.d.ts",
   "exports": {
     ".": {
       "types": "./types/index.d.ts",
-      "import": "./dist/adsbooster.esm.js",
+      "import": "./dist/adsbooster.mjs",
       "require": "./dist/adsbooster.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": ["dist/", "types/", "src/", "examples/", "README.md", "LICENSE"],
   "scripts": {
     "test": "node tools/ci-sanity.js",
-    "build:esm": "node tools/build-esm.js"
+    "build:esm": "node tools/build-esm.js",
+    "build:umd": "node tools/build-umd.js"
   },
-  "keywords": ["adsbooster", "ads", "ugc", "ai", "social-media", "marketing", "capi", "conversions-api", "tiktok", "meta", "sdk"],
+  "keywords": [
+    "adsbooster",
+    "ads",
+    "ugc",
+    "ai",
+    "social-media",
+    "marketing",
+    "capi",
+    "conversions-api",
+    "tiktok",
+    "meta",
+    "sdk",
+    "flutterwave",
+    "paystack",
+    "gemini",
+    "groq",
+    "bundle-social",
+    "zernio"
+  ],
   "author": "Adsbooster.net Engineering Team",
   "license": "MIT",
-  "engines": { "node": ">=18" },
-  "repository": { "type": "git", "url": "git+https://github.com/FushionHub/adsbooster-js-sdk.git" },
-  "bugs": { "url": "https://github.com/FushionHub/adsbooster-js-sdk/issues" },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {},
+  "optionalDependencies": {
+    "@google/genai": "^3.2.0",
+    "flutterwave": "^2.2.8",
+    "groq-sdk": "^1.6.0"
+  },
+  "peerDependencies": {
+    "@google/genai": "^3.2.0",
+    "flutterwave": "^2.2.8",
+    "groq-sdk": "^1.6.0"
+  },
+  "peerDependenciesMeta": {
+    "@google/genai": {
+      "optional": true
+    },
+    "flutterwave": {
+      "optional": true
+    },
+    "groq-sdk": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@google/genai": "^3.2.0",
+    "flutterwave": "^2.2.8",
+    "groq-sdk": "^1.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FushionHub/adsbooster-js-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FushionHub/adsbooster-js-sdk/issues"
+  },
   "homepage": "https://github.com/FushionHub/adsbooster-js-sdk#readme",
   "sideEffects": false
 }

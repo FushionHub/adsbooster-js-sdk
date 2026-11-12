@@ -95,6 +95,57 @@ export interface CapiTrackPayload {
   source_url?: string;
 }
 
+/** Which optional integration packages are installed next to the SDK. */
+export interface IntegrationAvailability {
+  /** `@google/genai` is installed. */
+  gemini: boolean;
+  /** `flutterwave` is installed. */
+  flutterwave: boolean;
+  /** `groq-sdk` is installed. */
+  groq: boolean;
+}
+
+export interface GeminiGeneratePayload {
+  /** Prompt or contents sent to the model. */
+  prompt: string;
+  /** Gemini API key. */
+  apiKey: string;
+  /** Model id. Default `gemini-2.5-flash`. */
+  model?: string;
+  /** Optional system instruction. */
+  systemInstruction?: string;
+}
+
+export interface GeminiGenerateResult {
+  /** Generated text. */
+  text: string;
+  /** Raw @google/genai response. */
+  raw: unknown;
+}
+
+export interface GroqChatMessage {
+  role: 'system' | 'user' | 'assistant' | string;
+  content: string;
+}
+
+export interface GroqChatPayload {
+  /** Conversation messages. */
+  messages: GroqChatMessage[];
+  /** Groq API key. */
+  apiKey: string;
+  /** Model id. Default `llama-3.3-70b-versatile`. */
+  model?: string;
+}
+
+export interface FlutterwaveClientPayload {
+  /** Flutterwave secret key (server-side only). */
+  secretKey: string;
+  /** Public key - when set, the v2-style positional constructor is used. */
+  publicKey?: string;
+  /** Set to false to target the staging environment. */
+  production?: boolean;
+}
+
 /** Generic API response — every endpoint returns success:true plus its own fields. */
 export interface ApiResponse<T = Record<string, any>> {
   success: true;
@@ -169,6 +220,22 @@ export declare class Adsbooster {
   readonly publicAnalytics: {
     feed(view?: 'all' | 'campaigns' | 'users' | 'platforms' | 'success'): Promise<ApiResponse>;
     totals(): Promise<ApiResponse>;
+  };
+
+  /**
+   * Optional Node.js integrations for the packages shipped alongside the SDK
+   * (Flutterwave, Google Gemini, Groq). Resolved lazily — nothing is loaded
+   * until one of these helpers is called.
+   */
+  readonly integrations: {
+    /** Report which optional packages are installed. */
+    detect(): IntegrationAvailability;
+    /** Generate text with Google Gemini (@google/genai). */
+    geminiGenerateText(payload: GeminiGeneratePayload): Promise<GeminiGenerateResult>;
+    /** Chat completion through Groq (groq-sdk). */
+    groqChat(payload: GroqChatPayload): Promise<unknown>;
+    /** Build a Flutterwave client for server-side payment tooling. */
+    flutterwaveClient(payload: FlutterwaveClientPayload): Promise<unknown>;
   };
 }
 

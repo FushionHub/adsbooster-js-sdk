@@ -17,12 +17,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Install dependencies (includes the optional integration packages)
+        run: npm ci --no-audit --no-fund
       - name: Syntax check (all builds)
         run: |
           node --check src/adsbooster.js
           node --check dist/adsbooster.js
-          node --check dist/adsbooster.esm.js
-      - name: Unit sanity (client construction + webhook signing)
+          node --check dist/adsbooster.mjs
+      - name: Unit sanity (client construction + webhook signing + optional integrations)
         run: |
           node -e "
             const { Adsbooster, webhooks, AdsboosterError } = require('./dist/adsbooster.js');
@@ -34,5 +36,9 @@ jobs:
             let threw = false;
             try { new Adsbooster({}); } catch (e) { threw = e instanceof AdsboosterError; }
             if (!threw) throw new Error('missing apiKey must throw AdsboosterError');
-            console.log('CI sanity checks passed');
+            const av = c.integrations.detect();
+            if (typeof av.gemini !== 'boolean') throw new Error('integrations.detect() broken');
+            console.log('CI sanity checks passed', JSON.stringify(av));
           "
+      - name: Full sanity suite
+        run: npm test

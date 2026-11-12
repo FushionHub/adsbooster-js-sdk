@@ -5,7 +5,7 @@
 'use strict';
 
 
-  var VERSION = '1.1.0';
+  var VERSION = '1.2.0';
   var DEFAULT_TIMEOUT = 30000;   // ms
   var DEFAULT_RETRIES = 2;       // retries on 429/5xx (initial attempt excluded)
   var AI_CREDITS_PER_USD = 100;  // documented platform rate
@@ -54,6 +54,35 @@
   }
 
   function nowSec() { return Math.floor(Date.now() / 1000); }
+
+  /* ───────────── Optional third-party integration helpers ───────── */
+
+  /** True when running on Node.js (the optional integrations are server-side only). */
+  function isNodeRuntime() {
+    return typeof process !== 'undefined' && !!(process.versions && process.versions.node);
+  }
+
+  /** Can a package be resolved from the current installation? Works for ESM + CJS. */
+  function canResolve(name) {
+    if (!isNodeRuntime() || typeof require !== 'function' || !require.resolve) return false;
+    try { require.resolve(name); return true; } catch (e) { return false; }
+  }
+
+  /** Dynamic import of an optional dependency with a helpful error when missing. */
+  function importOptional(name) {
+    if (!isNodeRuntime()) {
+      return Promise.reject(new AdsboosterError(
+        'The optional package "' + name + '" can only be used from Node.js. ' +
+        'The browser build talks to the Adsbooster API directly.'
+      ));
+    }
+    return import(name).catch(function (err) {
+      throw new AdsboosterError(
+        'The optional package "' + name + '" is not installed. Install it with: npm install ' + name,
+        { code: 'MissingOptionalDependency', details: err && err.message }
+      );
+    });
+  }
 
   function parseRetryAfter(headers) {
     if (!headers) return null;
@@ -107,6 +136,7 @@
     this.capi       = new CapiResource(this);
     this.webhooks   = new WebhooksResource(this);
     this.publicAnalytics = new PublicAnalyticsResource(this);
+    this.integrations = new IntegrationsResource(this);
 
     // Last observed quota: { limit, remaining, reset }
     this.lastRateLimit = null;
@@ -417,6 +447,115 @@
   PublicAnalyticsResource.prototype.totals = function () {
     return this.feed('all').then(function (j) {
       return j && j.analytics ? j.analytics : j;
+    });
+  };
+
+  /* ───────────────── Optional integrations (Node.js) ────────────── */
+
+  /**
+   * Optional integrations for the packages the SDK ships alongside:
+   * Flutterwave (payments), Google Gemini and Groq (AI).
+   *
+   * The core client never imports them - they are resolved lazily, so the
+   * browser/UMD build stays dependency-free and nothing is loaded until you
+   * actually call one of these helpers.
+   */
+  function IntegrationsResource(client) { this._c = client; }
+
+  /**
+   * Report which optional packages are actually installed next to the SDK.
+   * @returns {{gemini: boolean, flutterwave: boolean, groq: boolean}}
+   */
+  IntegrationsResource.prototype.detect = function () {
+    return {
+      gemini: canResolve('@google/genai'),
+      flutterwave: canResolve('flutterwave'),
+      groq: canResolve('groq-sdk')
+    };
+  };
+
+  /**
+   * Generate text with Google Gemini (@google/genai).
+   * payload: { prompt, apiKey, model?, systemInstruction? }
+   * @returns {Promise<{text: string, raw: object}>}
+   */
+  IntegrationsResource.prototype.geminiGenerateText = function (payload) {
+    payload = payload || {};
+    if (!payload.prompt) {
+      return Promise.reject(new AdsboosterError('integrations.geminiGenerateText() requires { prompt: "…" }.'));
+    }
+    if (!payload.apiKey) {
+      return Promise.reject(new AdsboosterError('integrations.geminiGenerateText() requires an `apiKey` (Gemini API key).'));
+    }
+    return importOptional('@google/genai').then(function (mod) {
+      var GoogleGenAI = mod.GoogleGenAI || (mod.default && mod.default.GoogleGenAI);
+      if (!GoogleGenAI) {
+        throw new AdsboosterError('The installed @google/genai package does not expose GoogleGenAI.');
+      }
+      var ai = new GoogleGenAI({ apiKey: payload.apiKey });
+      var request = {
+        model: payload.model || 'gemini-2.5-flash',
+        contents: payload.prompt
+      };
+      if (payload.systemInstruction) {
+        request.config = { systemInstruction: payload.systemInstruction };
+      }
+      return ai.models.generateContent(request);
+    }).then(function (res) {
+      return { text: res && res.text, raw: res };
+    });
+  };
+
+  /**
+   * Chat completion through Groq (groq-sdk).
+   * payload: { messages, apiKey, model? }
+   * @returns {Promise<object>} the raw Groq completion response
+   */
+  IntegrationsResource.prototype.groqChat = function (payload) {
+    payload = payload || {};
+    if (!payload.messages || !payload.messages.length) {
+      return Promise.reject(new AdsboosterError('integrations.groqChat() requires { messages: [{ role, content }] }.'));
+    }
+    if (!payload.apiKey) {
+      return Promise.reject(new AdsboosterError('integrations.groqChat() requires an `apiKey` (Groq API key).'));
+    }
+    return importOptional('groq-sdk').then(function (mod) {
+      var Groq = mod.Groq || (typeof mod === 'function' ? mod : mod.default);
+      if (!Groq) {
+        throw new AdsboosterError('The installed groq-sdk package does not expose a Groq client.');
+      }
+      var groq = new Groq({ apiKey: payload.apiKey });
+      return groq.chat.completions.create({
+        model: payload.model || 'llama-3.3-70b-versatile',
+        messages: payload.messages
+      });
+    });
+  };
+
+  /**
+   * Build a Flutterwave client for server-side payment operations.
+   * payload: { secretKey, publicKey?, production? }
+   *
+   * Payment verification for Adsbooster checkouts stays on the platform
+   * (it is what confirms a transaction) - this helper is for building your
+   * own Flutterwave tooling next to the SDK.
+   */
+  IntegrationsResource.prototype.flutterwaveClient = function (payload) {
+    payload = payload || {};
+    if (!payload.secretKey) {
+      return Promise.reject(new AdsboosterError('integrations.flutterwaveClient() requires { secretKey: "…" } (server-side only).'));
+    }
+    return importOptional('flutterwave').then(function (mod) {
+      var Fw = (mod && mod.default) || mod;
+      if (typeof Fw !== 'function') {
+        throw new AdsboosterError('The installed flutterwave package does not expose a constructor.');
+      }
+      // flutterwave v2 takes (publicKey, secretKey, productionFlag);
+      // newer builds take an options object.
+      if (payload.publicKey) {
+        return new Fw(payload.publicKey, payload.secretKey, payload.production === false ? false : undefined);
+      }
+      return new Fw({ secretKey: payload.secretKey });
     });
   };
 

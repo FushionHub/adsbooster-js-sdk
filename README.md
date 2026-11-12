@@ -9,7 +9,8 @@ Official JavaScript / TypeScript client for the **Adsbooster.net REST API v1** �
 - **Zero dependencies** — one small file, works in Node.js (≥18) and modern browsers
 - **Typed** — ships complete TypeScript definitions
 - **Resilient** — automatic retries on `429`/`5xx`, timeout via `AbortController`, rate-limit telemetry on every response
-- **Universal** — UMD (`dist/adsbooster.js`), ESM (`dist/adsbooster.esm.js`)
+- **Universal** — UMD (`dist/adsbooster.js`), ESM (`dist/adsbooster.mjs`)
+- **Optional integrations** — Flutterwave, Google Gemini and Groq ship alongside the SDK and load lazily
 
 > **Published:** [`adsbooster-js-sdk` on npm](https://www.npmjs.com/package/adsbooster-js-sdk) — `npm install adsbooster-js-sdk`
 > SDK repo: https://github.com/FushionHub/adsbooster-js-sdk
@@ -91,6 +92,57 @@ await client.posts.create({
 | `client.publicAnalytics` | `feed(view?)` · `totals()` — public aggregate, no auth (30 req/min/IP) | `/api/v1/public-analytics.php` |
 
 Every response is the raw API payload (`{ success: true, … }`). Non-2xx responses throw an [`AdsboosterError`](#error-handling).
+
+## Optional integrations (Flutterwave · Gemini · Groq)
+
+The SDK ships with the integration packages the platform itself uses, declared in
+`package.json` as **optional dependencies + optional peers**:
+
+| Package | Version | Used for |
+|---|---|---|
+| [`flutterwave`](https://www.npmjs.com/package/flutterwave) | `^2.2.8` | server-side payment tooling next to the Adsbooster checkout |
+| [`@google/genai`](https://www.npmjs.com/package/@google/genai) | `^3.2.0` | Google Gemini (text + image generation) |
+| [`groq-sdk`](https://www.npmjs.com/package/groq-sdk) | `^1.6.0` | Groq chat completions |
+
+They are **never imported by the core client** — the browser/UMD build stays
+dependency-free and nothing loads until you call an integration. They are
+installed automatically with `npm install adsbooster-js-sdk`; skip them with
+`npm install adsbooster-js-sdk --omit=optional`.
+
+```js
+const { Adsbooster } = require('adsbooster-js-sdk');
+
+const client = new Adsbooster({ apiKey: process.env.ADSBOOSTER_API_KEY });
+
+// Which optional packages are present right now?
+client.integrations.detect();
+// { gemini: true, flutterwave: true, groq: true }
+
+// Google Gemini (Node.js)
+const { text } = await client.integrations.geminiGenerateText({
+  prompt: 'Write 3 ad headlines for running shoes',
+  apiKey: process.env.GEMINI_API_KEY,
+  model: 'gemini-2.5-flash',
+});
+
+// Groq chat completions
+const completion = await client.integrations.groqChat({
+  messages: [{ role: 'user', content: 'Summarise this campaign report' }],
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+// Flutterwave client (server-side only)
+const flw = await client.integrations.flutterwaveClient({
+  publicKey: process.env.FLW_PUBLIC_KEY,
+  secretKey: process.env.FLW_SECRET_KEY,
+});
+```
+
+> Payments for Adsbooster checkouts are still verified **on the platform** —
+> `client.integrations.flutterwaveClient()` is for building your own Flutterwave
+> tooling alongside the SDK, not for replacing checkout verification.
+
+---
 
 ## Error handling
 
@@ -194,7 +246,7 @@ token is stored in GitHub.
 1. Bump the version and rebuild:
    ```bash
    npm version 1.2.0            # updates package.json + creates a git tag
-   npm run build:esm            # regenerate dist/adsbooster.esm.js
+   npm run build:esm            # regenerate dist/adsbooster.mjs
    npm test
    git push --follow-tags
    ```

@@ -1,5 +1,5 @@
 /**
- * Generate dist/adsbooster.esm.js from the canonical UMD build.
+ * Generate dist/adsbooster.mjs from the canonical UMD build.
  * Unwraps the UMD factory body and appends ESM exports — same shape as
  * the v1.0.0 ESM already on origin/main (header + 'use strict' + body + exports).
  */
@@ -43,5 +43,8 @@ const footer =
   "\n\nexport { VERSION, Adsbooster, AdsboosterError, AI_CREDITS_PER_USD, webhooks };\n" +
   "export default Adsbooster;\n";
 
-fs.writeFileSync(path.join(base, 'dist', 'adsbooster.esm.js'), header + body + footer, 'utf8');
+// The ESM build uses the .mjs extension on purpose: the package itself is
+// CommonJS ("type" is absent), so a .js file would be parsed as CJS by
+// Node 18/20 and `import` would fail with "Unexpected token 'export'".
+fs.writeFileSync(path.join(base, 'dist', 'adsbooster.mjs'), header + body + footer, 'utf8');
 console.log('ESM build written:', (header + body + footer).length, 'bytes');
