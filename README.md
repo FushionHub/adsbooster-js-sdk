@@ -1,5 +1,9 @@
 # Adsbooster JavaScript SDK
 
+[![npm version](https://img.shields.io/npm/v/adsbooster-js-sdk.svg)](https://www.npmjs.com/package/adsbooster-js-sdk)
+[![npm downloads](https://img.shields.io/npm/dm/adsbooster-js-sdk.svg)](https://www.npmjs.com/package/adsbooster-js-sdk)
+[![license](https://img.shields.io/npm/l/adsbooster-js-sdk.svg)](LICENSE)
+
 Official JavaScript / TypeScript client for the **Adsbooster.net REST API v1** — built for SaaS teams that want AI ad creatives, multi-network campaign management, social publishing and server-side conversion tracking inside their own product.
 
 - **Zero dependencies** — one small file, works in Node.js (≥18) and modern browsers
@@ -7,9 +11,9 @@ Official JavaScript / TypeScript client for the **Adsbooster.net REST API v1** �
 - **Resilient** — automatic retries on `429`/`5xx`, timeout via `AbortController`, rate-limit telemetry on every response
 - **Universal** — UMD (`dist/adsbooster.js`), ESM (`dist/adsbooster.esm.js`)
 
+> **Published:** [`adsbooster-js-sdk` on npm](https://www.npmjs.com/package/adsbooster-js-sdk) — `npm install adsbooster-js-sdk`
 > SDK repo: https://github.com/FushionHub/adsbooster-js-sdk
-> Platform repo: https://github.com/FushionHub/seopp
-> The SDK will move to the `adsbooster-sdks` organization — after transferring, update `repository` in package.json and the links above.
+> Platform repo: https://github.com/FushionHub/adbooster_net
 
 ---
 
@@ -25,7 +29,7 @@ npm install adsbooster-js-sdk
 <!-- Self-hosted — served straight from your platform, always in sync -->
 <script src="https://adsbooster.net/api/v1/sdk/adsbooster.js"></script>
 
-<!-- or jsDelivr once published -->
+<!-- or jsDelivr (npm CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/adsbooster-js-sdk/dist/adsbooster.js"></script>
 ```
 
@@ -181,6 +185,32 @@ const res = await client.campaigns.list({ status: 'active', limit: 50 });
 2. Open **Developer Console** (`/api-settings`)
 3. Generate a key (`adsb_live_…`) — optionally restrict it to your server IPs
 4. Fund ad/AI credits from **Billing & Wallet** (top-ups from $2.50)
+
+## Releasing a new version
+
+Publishing is automated with **npm Trusted Publishing (OIDC)** — no long-lived
+token is stored in GitHub.
+
+1. Bump the version and rebuild:
+   ```bash
+   npm version 1.2.0            # updates package.json + creates a git tag
+   npm run build:esm            # regenerate dist/adsbooster.esm.js
+   npm test
+   git push --follow-tags
+   ```
+2. Create a GitHub release for the tag — the `Publish` workflow publishes to npm
+   with provenance automatically.
+
+One-time setup on npmjs.com: **Package → Settings → Trusted Publisher → GitHub
+Actions** → owner `FushionHub`, repository `adsbooster-js-sdk`, workflow
+`publish.yml`.
+
+Local publishing (no CI):
+
+```bash
+npm login
+npm publish --access public
+```
 
 ## License
 

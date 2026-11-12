@@ -1,0 +1,59 @@
+name: Publish
+
+# Publishes to npm via Trusted Publishing (OIDC) - no long-lived token needed.
+# One-time setup on npmjs.com:
+#   Package -> Settings -> Trusted Publisher -> GitHub Actions
+#   Organization/Owner: FushionHub
+#   Repository: adsbooster-js-sdk
+#   Workflow filename: publish.yml
+#   (optional) Environment: release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag to publish (e.g. v1.2.0)'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC - npm exchanges this for a short-lived publish token
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Install (zero runtime dependencies)
+        run: npm install --no-audit --no-fund
+
+      - name: Run sanity tests
+        run: npm test
+
+      - name: Rebuild ESM bundle
+        run: npm run build:esm
+
+      - name: Verify version matches the release tag
+        if: github.event.inputs.tag != ''
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "${TAG#v}" != "$VERSION" ]; then
+            echo "::error::package.json version ($VERSION) does not match tag ($TAG)"
+            exit 1
+          fi
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # only needed as a fallback when OIDC is not configured
